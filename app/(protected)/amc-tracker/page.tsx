@@ -7,11 +7,25 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-export default async function AMCTrackerPage(props: { searchParams: Promise<{ q?: string, page?: string }> }) {
+import { getSettings } from "@/lib/actions/settings";
+import { getProductStatus, getStatusColor } from "@/lib/utils/productStatus";
+import { auth } from "@/lib/auth";
+
+export default async function AMCTrackerPage(props: { searchParams: Promise<{ q?: string, page?: string, region?: string, branch?: string }> }) {
+  const session = await auth();
+  const isAdmin = session?.user?.role === "admin";
+  
   const searchParams = await props.searchParams;
   const q = searchParams.q || "";
   const page = Number(searchParams.page) || 1;
-  const { dueVisits, total, pages } = await getDueVisits(page, 15, q);
+  const region = searchParams.region || "";
+  const branch = searchParams.branch || "";
+
+  const { dueVisits, total, pages } = await getDueVisits(page, 15, q, region, branch);
+  
+  const settings = await getSettings();
+  const regions = settings.find((s: any) => s.key === "regions")?.values || [];
+  const branches = settings.find((s: any) => s.key === "branches")?.values || [];
 
   return (
     <div className="space-y-6">
@@ -19,12 +33,26 @@ export default async function AMCTrackerPage(props: { searchParams: Promise<{ q?
         <h2 className="text-2xl font-bold tracking-tight">AMC Service Tracker</h2>
       </div>
 
-      <Card className="p-4">
-        <form method="GET" className="flex flex-col sm:flex-row gap-2">
-          <Input name="q" placeholder="Search by org, product type, or S/N..." defaultValue={q} className="max-w-sm" />
+      <Card className="p-4 bg-white/50 border-dashed">
+        <form method="GET" className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-2">
+          <Input name="q" placeholder="Search customer or product..." defaultValue={q} className="md:col-span-2 bg-white" />
+          
+          {isAdmin && (
+            <>
+              <select name="region" defaultValue={region} className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm">
+                <option value="">All Regions</option>
+                {regions.map((r: string) => <option key={r} value={r}>{r}</option>)}
+              </select>
+              <select name="branch" defaultValue={branch} className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm">
+                <option value="">All Branches</option>
+                {branches.map((b: string) => <option key={b} value={b}>{b}</option>)}
+              </select>
+            </>
+          )}
+
           <div className="flex gap-2">
-            <Button type="submit" variant="secondary">Filter</Button>
-            {q && <Link href="/amc-tracker"><Button variant="ghost">Clear</Button></Link>}
+            <Button type="submit" variant="secondary" className="flex-1">Filter</Button>
+            {(q || region || branch) && <Link href="/amc-tracker"><Button type="button" variant="ghost">Clear</Button></Link>}
           </div>
         </form>
       </Card>
@@ -70,7 +98,12 @@ export default async function AMCTrackerPage(props: { searchParams: Promise<{ q?
                   <TableCell>
                     <p className="font-medium">{item.type} {item.rating ? `(${item.rating})` : ''}</p>
                     <p className="text-xs text-muted-foreground">S/N: {item.serialNo}</p>
-                    <Badge variant="outline" className="mt-1 capitalize text-[10px]">{item.visitFrequency}</Badge>
+                    <div className="flex gap-1 mt-1">
+                      <Badge variant="outline" className="capitalize text-[10px]">{item.visitFrequency}</Badge>
+                      <Badge className={getStatusColor(getProductStatus(item)) + " text-[10px]"}>
+                        {getProductStatus(item)}
+                      </Badge>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <p className="text-sm">{new Date(item.intervalStart).toLocaleDateString()} to</p>
@@ -100,6 +133,12 @@ export default async function AMCTrackerPage(props: { searchParams: Promise<{ q?
                 <div>
                   <h4 className="font-semibold">{item.customer?.organization || "Unknown"}</h4>
                   <p className="text-xs text-muted-foreground">{item.type} • S/N: {item.serialNo}</p>
+                  <div className="flex gap-1 mt-1">
+                    <Badge variant="outline" className="text-[10px] uppercase">{item.visitFrequency}</Badge>
+                    <Badge className={getStatusColor(getProductStatus(item)) + " text-[10px]"}>
+                      {getProductStatus(item)}
+                    </Badge>
+                  </div>
                 </div>
                 <Badge variant={item.daysToEnd < 7 ? "destructive" : "secondary"} className="whitespace-nowrap ml-2">
                   {item.daysToEnd < 0 ? 'Overdue' : `${item.daysToEnd} days left`}

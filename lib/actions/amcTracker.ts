@@ -4,7 +4,7 @@ import connectToDatabase from "@/lib/db";
 import Product from "@/lib/models/Product";
 import { auth } from "@/lib/auth";
 
-export async function getDueVisits(page = 1, limit = 15, queryStr?: string) {
+export async function getDueVisits(page = 1, limit = 15, queryStr?: string, region?: string, branch?: string) {
   const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
 
@@ -143,6 +143,14 @@ export async function getDueVisits(page = 1, limit = 15, queryStr?: string) {
         ]
       }
     });
+  }
+
+  if (region) {
+    pipeline.push({ $match: { "customer.region": region } });
+  }
+
+  if (branch) {
+    pipeline.push({ $match: { "customer.branch": branch } });
   }
 
   const skip = (page - 1) * limit;
