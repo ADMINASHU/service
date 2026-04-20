@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus } from "lucide-react";
+import { getProductStatus, getStatusColor } from "@/lib/utils/productStatus";
 
 export default async function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -66,6 +67,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
               <TableHead>Serial No</TableHead>
               <TableHead>Rating/DC</TableHead>
               <TableHead>Make</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>AMC Freq</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -73,7 +75,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
           <TableBody>
             {products.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center h-24">No products recorded.</TableCell>
+                <TableCell colSpan={7} className="text-center h-24">No products recorded.</TableCell>
               </TableRow>
             )}
             {products.map((p: any) => (
@@ -85,6 +87,11 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
                 </TableCell>
                 <TableCell>{p.rating || "-"} / {p.dcVolt || "-"}</TableCell>
                 <TableCell>{p.make || "-"}</TableCell>
+                <TableCell>
+                  <Badge className={getStatusColor(getProductStatus(p))}>
+                    {getProductStatus(p)}
+                  </Badge>
+                </TableCell>
                 <TableCell className="capitalize">{p.visitFrequency || "None"}</TableCell>
                 <TableCell className="text-right">
                   <Link href={`/customers/${id}/products/${p._id}/edit`}>

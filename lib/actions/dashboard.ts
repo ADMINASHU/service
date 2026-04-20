@@ -37,6 +37,39 @@ export async function getDashboardStats() {
         byBatteryType: [
           { $match: { batteryType: { $exists: true, $ne: "" } } },
           { $group: { _id: "$batteryType", count: { $sum: 1 } } }
+        ],
+        byStatus: [
+          {
+            $addFields: {
+              status: {
+                $cond: [
+                  { 
+                    $and: [
+                      { $ne: ["$installationDate", null] },
+                      { $ne: ["$warrantyPeriod", null] },
+                      { $lte: [new Date(), { $dateAdd: { startDate: "$installationDate", unit: "month", amount: "$warrantyPeriod" } }] }
+                    ]
+                  },
+                  "Warranty",
+                  {
+                    $cond: [
+                      {
+                        $and: [
+                          { $ne: ["$amcStartDate", null] },
+                          { $ne: ["$amcPeriod", null] },
+                          { $gte: [new Date(), "$amcStartDate"] },
+                          { $lte: [new Date(), { $dateAdd: { startDate: "$amcStartDate", unit: "month", amount: "$amcPeriod" } }] }
+                        ]
+                      },
+                      "AMC",
+                      "Expired"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          { $group: { _id: "$status", count: { $sum: 1 } } }
         ]
       }
     }
@@ -48,6 +81,7 @@ export async function getDashboardStats() {
     totalCustomers,
     totalProducts,
     productsByType: results[0]?.byType || [],
-    productsByBattery: results[0]?.byBatteryType || []
+    productsByBattery: results[0]?.byBatteryType || [],
+    productsByStatus: results[0]?.byStatus || []
   }));
 }

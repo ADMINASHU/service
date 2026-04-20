@@ -89,6 +89,29 @@ export default async function DashboardPage() {
             </div>
           </CardContent>
         </Card>
+        
+        <Card className="border-indigo-100 bg-indigo-50/10">
+          <CardHeader>
+            <CardTitle className="text-indigo-700">Lifecycle Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {stats.productsByStatus.length === 0 && <p className="text-sm text-gray-500">No data</p>}
+              {stats.productsByStatus.map((t: any) => (
+                <div key={t._id} className="flex items-center justify-between">
+                  <Badge variant="outline" className={
+                    t._id === 'Warranty' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
+                    t._id === 'AMC' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 
+                    'bg-slate-50 text-slate-700 border-slate-200'
+                  }>
+                    {t._id}
+                  </Badge>
+                  <p className="text-sm font-bold">{t.count}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <Card>

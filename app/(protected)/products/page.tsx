@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, ShieldCheck, Clock, AlertTriangle } from "lucide-react";
+import { getProductStatus, getStatusColor } from "@/lib/utils/productStatus";
 
 export default async function ProductsPage(props: { searchParams: Promise<{ page?: string, q?: string }> }) {
   const searchParams = await props.searchParams;
@@ -38,6 +39,7 @@ export default async function ProductsPage(props: { searchParams: Promise<{ page
               <TableHead>Customer</TableHead>
               <TableHead>Rating/DC</TableHead>
               <TableHead>Make</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>AMC Freq</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -61,6 +63,11 @@ export default async function ProductsPage(props: { searchParams: Promise<{ page
                 </TableCell>
                 <TableCell>{p.rating || "-"} / {p.dcVolt || "-"}</TableCell>
                 <TableCell>{p.make || "-"}</TableCell>
+                <TableCell>
+                  <Badge className={getStatusColor(getProductStatus(p))}>
+                    {getProductStatus(p)}
+                  </Badge>
+                </TableCell>
                 <TableCell className="capitalize">{p.visitFrequency || "None"}</TableCell>
                 <TableCell className="text-right">
                   <Link href={`/customers/${p.customerId?._id}/products/${p._id}/edit`}>
@@ -87,6 +94,11 @@ export default async function ProductsPage(props: { searchParams: Promise<{ page
                   <p className="text-sm font-medium">S/N: {p.serialNo}</p>
                 </div>
                 {p.isAutoSerial && <Badge variant="secondary" className="text-[10px]">AUTO</Badge>}
+              </div>
+              <div className="flex gap-2">
+                <Badge className={`${getStatusColor(getProductStatus(p))} text-[10px]`}>
+                  {getProductStatus(p)}
+                </Badge>
               </div>
               <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
                 <span className="block font-semibold text-gray-800">{p.customerId?.organization || "Unknown"}</span>

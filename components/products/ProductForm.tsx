@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { getProductStatus, getStatusColor } from "@/lib/utils/productStatus";
 
 export function ProductForm({ customerId, initialData, productTypes = [] }: { customerId: string, initialData?: any, productTypes?: string[] }) {
   const router = useRouter();
@@ -38,6 +40,14 @@ export function ProductForm({ customerId, initialData, productTypes = [] }: { cu
     <Card>
       <CardContent className="p-6">
         <form onSubmit={onSubmit} className="space-y-6">
+          {initialData && (
+            <div className="flex items-center gap-2 mb-4 bg-gray-50 p-3 rounded-lg border border-dashed">
+              <span className="text-sm font-medium text-gray-500">Current Lifecycle Status:</span>
+              <Badge className={getStatusColor(getProductStatus(initialData))}>
+                {getProductStatus(initialData)}
+              </Badge>
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             
             <div className="space-y-2">
